@@ -5,8 +5,14 @@ This module demonstrates pytest testing patterns for FastAPI endpoints,
 including fixtures, parametrized tests, and validation testing.
 """
 
+import sys
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
+
+# Ensure repo root is on sys.path for CI environments where import resolution differs.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.main import app
 
