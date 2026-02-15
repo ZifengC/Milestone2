@@ -14,3 +14,4 @@ env/
 *.pdf
 tests/
 .github/
+.vscode
