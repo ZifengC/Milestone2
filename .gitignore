@@ -33,3 +33,4 @@ dist/
 
 # Local database/artifacts
 *.db
+.vscode/
