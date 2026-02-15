@@ -68,10 +68,8 @@ COPY --from=builder --chown=appuser:appuser /build/app /app
 EXPOSE 8000
 
 # Health check to ensure the service is responding
-# Useful for container orchestration and CI/CD validation
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Start the production server using Uvicorn
-# 'main:app' assumes main.py is in the root of the /app directory
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
