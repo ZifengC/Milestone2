@@ -9,7 +9,7 @@ Production-style ML inference service for Iris class prediction with:
 
 
 ## Deliverables Mapping (Milestone 2)
-
+```bash
 ml-service/
 ├── .github/
 │   └── workflows/
@@ -28,7 +28,7 @@ ml-service/
 ├── README.md                   # Add CI badge (see below)
 ├── RUNBOOK.md                  # NEW: Operations documentation
 └── requirements.txt
-
+```
 
 ## Quick Start (Local Development)
 
