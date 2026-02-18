@@ -1,24 +1,31 @@
 # Iris Prediction Service (Milestone 2)
 
-FastAPI service for Iris class prediction with:
+[![CI/CD Pipeline](https://github.com/<OWNER>/<REPO>/actions/workflows/build.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/build.yml)
+
+Production-style ML inference service for Iris class prediction with:
 - Multi-stage Docker build
-- GitHub Actions CI/CD
-- Push to Google Artifact Registry (GCP)
+- Automated GitHub Actions CI/CD (test, build, publish)
+- Image publishing to container registry with semantic tags
 
-## Project Structure
+Replace `<OWNER>/<REPO>` in the badge URL after pushing to your GitHub repository.
 
-- `app/main.py`: FastAPI app (`/health`, `/predict`)
-- `scripts/train_model.py`: trains and writes `app/model.joblib`
-- `Dockerfile`: multi-stage image (builder + runtime)
-- `.github/workflows/build.yml`: test, smoke test, and push pipeline
-- `tests/test_app.py`: API tests
+## Deliverables Mapping (Milestone 2)
+
+1. `Dockerfile`: multi-stage image with builder and minimal runtime stages
+2. `app/`: inference service + model artifact
+3. `docker-compose.yaml` (optional): not included
+4. Registry verification: perform push and capture screenshot/link from registry
+5. `.github/workflows/build.yml`: CI pipeline for test/build/push
+6. `README.md`: CI badge + image run instructions + quick start
+7. `tests/test_app.py`: endpoint and error-handling tests
+8. `RUNBOOK.md`: operations runbook for reproducibility, optimization, security, CI/CD, versioning, troubleshooting
 
 ## API
 
 - `GET /health` -> `{"status":"healthy"}`
 - `POST /predict` -> `{"prediction": <0|1|2>}`
 
-Example request:
+Example:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/predict \
@@ -26,7 +33,7 @@ curl -X POST http://127.0.0.1:8000/predict \
   -d '{"sepal_length":5.1,"sepal_width":3.5,"petal_length":1.4,"petal_width":0.2}'
 ```
 
-## Local Development
+## Quick Start (Local Development)
 
 ```bash
 python3 -m venv .venv
@@ -37,63 +44,64 @@ pytest tests -v --cov=app --cov-report=term-missing
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-## Docker
+## Pull and Run Published Image
 
-Build:
-
-```bash
-docker build -t iris-prediction:local .
-```
-
-Run:
+Set your registry coordinates:
 
 ```bash
-docker run --rm -p 8000:8000 iris-prediction:local
+export REGISTRY_HOST=<registry-host>
+export PROJECT_ID=<project-id>
+export REPOSITORY=<repo-name>
+export IMAGE_NAME=iris-prediction
+export TAG=v1.0.0
 ```
 
-Health check:
+Pull and run:
+
+```bash
+docker pull $REGISTRY_HOST/$PROJECT_ID/$REPOSITORY/$IMAGE_NAME:$TAG
+docker run --rm -p 8000:8000 $REGISTRY_HOST/$PROJECT_ID/$REPOSITORY/$IMAGE_NAME:$TAG
+```
+
+Smoke test:
 
 ```bash
 curl -fsS http://127.0.0.1:8000/health
 ```
 
-## CI/CD Pipeline
+## Registry Verification
+
+Successful image push to registry (example evidence):
+
+![Registry verification screenshot](figure/Screenshot1.png)
+
+## Build and Run Locally with Docker
+
+```bash
+docker build -t iris-prediction:local .
+docker run --rm -p 8000:8000 iris-prediction:local
+```
+
+## CI/CD Summary
 
 Workflow file: `.github/workflows/build.yml`
 
-Jobs:
-1. `test`: install deps + run pytest
-2. `docker-smoke-test`: build image, start container, verify `/health`
-3. `build-and-push`: authenticate to GCP, build/push image to Artifact Registry
+- `test`: runs `pytest`
+- `docker-smoke-test`: builds image and verifies `/health`
+- `build-and-push`: authenticates to registry and publishes image tags
 
-## GitHub Configuration for GCP
+## Semantic Versioning
 
-### Secrets
-
-- `GCP_SA_KEY`: service account JSON key used by:
-  - `credentials_json: ${{ secrets.GCP_SA_KEY }}`
-
-### Repository Variables
-
-- `GCP_REGISTRY_HOST` (example: `us-central1-docker.pkg.dev`)
-- `GCP_PROJECT_ID`
-- `GCP_ARTIFACT_REPO`
-
-Final pushed image format:
-
-`$GCP_REGISTRY_HOST/$GCP_PROJECT_ID/$GCP_ARTIFACT_REPO/iris-prediction:<tag>`
-
-## Release Tags
-
-Push a version tag to trigger release-style image tags:
+Use `vX.Y.Z` tags for release images:
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-## Security/Quality Notes
+## Security and Reproducibility Notes
 
-- Runtime container runs as non-root user `appuser`
-- Multi-stage build excludes build toolchain from runtime
-- Docker build context is reduced via `.dockerignore`
+- Runtime image runs as non-root user
+- Multi-stage build reduces attack surface
+- Dependency versions are pinned in `requirements.txt`
+- Build context is minimized with `.dockerignore`
